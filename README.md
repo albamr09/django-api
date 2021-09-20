@@ -18,6 +18,9 @@ Full fledged REST API that allows you to manage a set of books.
 ## Principles followed
 
 - [TDD (Test-driven development)](https://en.wikipedia.org/wiki/Test-driven_development)
+ 1. Write the unit test
+ 2. Ensure the test fails
+ 3. Write the feature in order for the test to pass
 - [PEP-8 best practice guidelines](https://www.python.org/dev/peps/pep-0008/)
 
 ---
