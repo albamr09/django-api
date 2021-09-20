@@ -26,7 +26,7 @@ Main feautures used:
 - **Viewsets**: used to create the structure of the API and create all of the necessary endpoints of the API.
 - **Serializers**: to provide validation to all of the API's requests and to help convert JSON objects to Django database models.
 - **Browsable API**: which allowed us to test the API's endpoints on the get-go.
-- 
+
 ---
 ## Principles followed
 
