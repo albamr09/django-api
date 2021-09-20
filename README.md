@@ -13,7 +13,20 @@ Full fledged REST API that allows you to manage a set of books.
 | [**Travis CI**](https://www.docker.com/)      |  Testing tool for automatically running linting and unit testing every time changes are added to the project's code. |
 | [**PostgreSQL**](https://www.postgresql.org/)      |  Database for our project (good integration with docker) |
 
+### Django
 
+Main features used: 
+- **ORM**(Object Relational Mapper): provides an easy to use way to convert objects in the API to rows in the database.
+- **Django admin**: provides an out-of-the-box website which allows us to manage the objects in our database.
+
+### Django REST Framework
+
+Main feautures used:
+- **Built-in authentication system**: used to add authentication to the API's endpoints.
+- **Viewsets**: used to create the structure of the API and create all of the necessary endpoints of the API.
+- **Serializers**: to provide validation to all of the API's requests and to help convert JSON objects to Django database models.
+- **Browsable API**: which allowed us to test the API's endpoints on the get-go.
+- 
 ---
 ## Principles followed
 
@@ -24,17 +37,3 @@ Full fledged REST API that allows you to manage a set of books.
 - [PEP-8 best practice guidelines](https://www.python.org/dev/peps/pep-0008/)
 
 ---
-
-## Django
-
-Main features used: 
-- **ORM**(Object Relational Mapper): provides an easy to use way to convert objects in the API to rows in the database.
-- **Django admin**: provides an out-of-the-box website which allows us to manage the objects in our database.
-
-## Django REST Framework
-
-Main feautures used:
-- **Built-in authentication system**: used to add authentication to the API's endpoints.
-- **Viewsets**: used to create the structure of the API and create all of the necessary endpoints of the API.
-- **Serializers**: to provide validation to all of the API's requests and to help convert JSON objects to Django database models.
-- **Browsable API**: which allowed us to test the API's endpoints on the get-go.
