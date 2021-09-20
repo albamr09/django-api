@@ -11,7 +11,7 @@ Full fledged REST API that allows you to manage a set of books.
 | [**Django REST Framework**](https://www.django-rest-framework.org/)      |  Extension to django which adds features related to building APIs. |
 | [**Docker**](https://www.docker.com/)      |  Virtualization tool that provides us the mechanism for isolating our project's dependencies from the machine it is running on. |
 | [**Travis CI**](https://www.docker.com/)      |  Testing tool for automatically running linting and unit testing every time changes are added to the project's code. |
-| [**PostgreSQL**](https://www.postgresql.org/")      |  Database for our project (good integration with docker) |
+| [**PostgreSQL**](https://www.postgresql.org/)      |  Database for our project (good integration with docker) |
 
 
 ---
