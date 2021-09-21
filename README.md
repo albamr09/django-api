@@ -9,6 +9,9 @@
     1. [Install Docker](#install_docker)
     2. [Configure Docker](#configure_docker)
     3. [Install Docker Compose](#install_compose)
+5. [Project Configuration](#configure_project)
+    1. [Dockerfile](#dockerfile)
+    1. [Dependencies](#requirements)
 ---
 ## Description <a name="description"></a>
 
@@ -151,7 +154,7 @@ $ docker run hello-world
 
 ### Install Docker Compose <a name="install_compose"></a>
 
-1. Download the current stable release of Docker Compose. Mind you, this command download the `1.29.2` version, check the [official page](https://docs.docker.com/compose/install/) for new releases.
+1. Download the current stable release of Docker Compose. Mind you, this command downloads the `1.29.2` version, check the [official page](https://docs.docker.com/compose/install/) for new releases.
 
 ```bash
 $ sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -169,4 +172,94 @@ $ sudo chmod +x /usr/local/bin/docker-compose
 $ docker-compose --version
 docker-compose version 1.29.2, build 5becea4c
 ```
+
+## Project Configuration <a name="configure_project"></a>
+
+Remember to create the source code folder (`app`), else, when creating the app Docker will exit with error.
+
+### Dockerfile <a name="dockerfile"></a>
+
+First of all, we create a file called `Dockerfile` on the root of our project. In this configuration file we include:
+
+1. **Base image**: It is the image from where we are going to inherit our Dockerfile from, building our image on top of another image. This base image will be downloaded from [Hub Docker](https://hub.docker.com/search?q=&type=image), our image will be created from the python3.7-alpine image (inspect the tags on the python image). 
+
+```dockerfile
+FROM $IMAGE:$TAG
+```
+
+In our case `IMAGE=python` and `TAG=3.7-alpine`.
+
+2. **Maintainer** (optional): who maintains the docker image.
+
+```dockerfile
+MAINTAINER albamr09
+```
+
+3. **Environment variables**: in our case we will set an environment variable that prevents Python from keeping outputs in the buffer, so we avoid further complication when working with a Docker image.
+
+```dockerfile
+ENV PYTHONUNBUFFERED 1
+```
+
+4. **Dependencies**: our dependencies will be listed locally on the file `requirements.txt`, the following line tells Docker to copy this file to the root folder of the Docker machine
+
+```dockerfile
+COPY ./requirements.txt /requirements.txt
+```
+
+Now, in order to install all of these depedencies into the Docker image we use pip, running the next command on the virtual machine:
+
+```dockerfile
+RUN pip install -r /requirements.txt
+```
+
+5. **Application source code**: we create a directory to store our source code, and we tell Docker that this directory is the default directory, and every app will run from said directory
+
+```dockerfile
+RUN mkdir /app
+WORKDIR /app
+COPY ./app /app
+```
+
+6. **User creation**: in this step we create the user that will run the application
+
+```dockerfile
+RUN adduser -D user
+USER user
+```
+
+This is done for security porpuses, otherwise the application is run as `root`, which is never recommended.
+
+### Dependencies (Requirements) <a name="requirements"></a>
+
+We, now, specify the dependencies of the project using the file `requirements.txt`. There we abide to the following convention:
+
+```
+$PKG>=0.0.1,<1.0.0
+```
+
+This way we show that we want to install the python package called `$PKG` whose version is at least `0.0.1` but not more than `1.0.0`.
+
+#### Dependency list
+
+| Name   | Version  |
+|--------|:---------:|
+| **Django** | >= 2.1.3, < 2.2.0|
+| **Django Rest Framework** | >= 3.9.0, < 3.10.0|
+
+### Building Docker Image
+
+In order to build the Docker image we just configured we must execute, on the root folder of our project (`django-api/`), the following command:
+
+```bash
+$ docker build .
+```
+
+
+
+
+
+
+
+
 
