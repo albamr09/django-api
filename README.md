@@ -247,8 +247,8 @@ This way we show that we want to install the python package called `$PKG` whose 
 
 | Name   | Version  |
 |--------|:---------:|
-| **Django** | >= 2.1.3, < 2.2.0|
-| **Django Rest Framework** | >= 3.9.0, < 3.10.0|
+| **Django** | >= 2.2.4, < 2.3.0|
+| **Django Rest Framework** | >= 3.11.2, < 3.12.0|
 
 ### Building Docker Image <a name="build"></a>
 
