@@ -297,7 +297,7 @@ To build our Docker image using the Docker Compose configuration we just put tog
 $ docker-compose build
 ```
 
-#### Running commands
+#### Create project
 
 To run a shell command on our Docker container we use `docker-compose`. This allows us to run the command on the specified service (`app`): 
 
