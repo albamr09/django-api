@@ -14,7 +14,8 @@
     2. [Dependencies](#requirements)
     3. [Building Docker Image](#build)
     4. [Docker Compose](#configure_compose)
-    4. [Create project](#create_project)
+    5. [Create project](#create_project)
+    6. [Travis CI](#travis)
 --- 
 ## Description <a name="description"></a>
 
@@ -308,7 +309,7 @@ $ docker-compose run app sh -c "whatever command"
 
 The keywords `sh -c ""` are no stricly needed, as the command could be run just with `$ docker-compose run app ""`, however this makes it easier to differentiate the command you are running on the docker image versus the docker-compose command.
 
-### Create project<a name="create_project"></a>
+### Create project <a name="create_project"></a>
 
 Now we are going to execute a command to create our project:
 
@@ -319,15 +320,16 @@ $ docker-compose run app sh -c "django-admin.py startproject app ."
 
 The command itself what it does is use `django-admin` (which we installed via dependencies) to create a new project (because we specify `startproject`) with the name `app` in our current location, namely `.` as established on the `Dockerfile` with `WORKDIR`.
 
-### Travis CI
+### Travis CI <a name="travis"></a>
 
 This continuous integration tool will let us run tests and checks on our project automatically everytime we push to our github repostory. 
 
 1. Sign up to [Travis CI](https://www.travis-ci.com) with your github account.
-2. Once you log in, you will be redirected to a site that will guide you through syncing your repositories.
-	1. To view the list of allowed repositories go to https://app.travis-ci.com/account/repositories. 
+2. Once you log in, you will be redirected to a [site](https://app.travis-ci.com/getting_started) that will guide you through syncing your repositories.
+	1. Click on `ACTIVATE ALL REPOSITORIES USING GITHUB APPS` and select only the repository you with to integrate with Travis CI.
+	2. To view the list of selected repositories go to https://app.travis-ci.com/account/repositories. 
 
-
+#### Configuration file
 
 
 
