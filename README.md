@@ -143,7 +143,7 @@ $ sudo groupadd docker
 ```bash
 $ sudo usermod -aG docker $USER
 ```
-3. Verify that it runs properly
+3. Log out, log in and verify that it runs properly
 ```bash
 $ docker run hello-world
 ```
