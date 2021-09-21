@@ -11,8 +11,10 @@
     3. [Install Docker Compose](#install_compose)
 5. [Project Configuration](#configure_project)
     1. [Dockerfile](#dockerfile)
-    1. [Dependencies](#requirements)
----
+    2. [Dependencies](#requirements)
+    3. [Building Docker Image](#build)
+    4. [Docker Compose](#configure_compose)
+--- 
 ## Description <a name="description"></a>
 
 Full fledged REST API that allows you to manage a set of books.
@@ -247,7 +249,7 @@ This way we show that we want to install the python package called `$PKG` whose 
 | **Django** | >= 2.1.3, < 2.2.0|
 | **Django Rest Framework** | >= 3.9.0, < 3.10.0|
 
-### Building Docker Image
+### Building Docker Image <a name="build"></a>
 
 In order to build the Docker image we just configured we must execute, on the root folder of our project (`django-api/`), the following command:
 
@@ -255,8 +257,45 @@ In order to build the Docker image we just configured we must execute, on the ro
 $ docker build .
 ```
 
+### Docker Compose <a name="configure_compose"></a>
 
+This tool allows us to manage easily the different services (e.g. python app, database, etc.) that make up our project. For that, we will need to make a Docker Compose configuration file denoted by `docker-compose.yml` that sits in the root folder of the project that sits in the root folder of the project.
 
+On the first line we define the version of Docker Compose for this configuration file:
+
+```yml
+version: "3"
+```
+
+Next we specify the configuration of the different services:
+
+```yml
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    command: >
+      sh -c "python manage.py runserver 0.0.0.0:8000"
+```
+
+With this we have:
+- Defined the service called app, whose build context will be the `WORKDIR` (`./`). 
+- Mapped the port `8000` of our local machine to the port `8000` of the Docker image. 
+- For live updating the local changes to our source code to the source code on the Docker image we use `volumes` which maps the local source code folder `./app` to the one on the virtual machine `/app`. 
+- Finally, to run our application in our Docker container we use the keywork `command`. (NOTE: we use `>` so the command is on its own separate line). 
+	- The command runs the Django development server available on all the IP addresses that run on the Docker container (`0.0.0.0`) on port `8000`, which is mapped to port `8000` in our local machine.
+
+#### Build
+
+To build our Docker image using the Docker Compose configuration we just put together we execute (remember, on the root folder of the project)
+
+```bash
+$ docker-compose build
+```
 
 
 
