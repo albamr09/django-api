@@ -297,6 +297,17 @@ To build our Docker image using the Docker Compose configuration we just put tog
 $ docker-compose build
 ```
 
+#### Running commands
+
+To run a shell command on our Docker container we use `docker-compose`. This allows us to run the command on the specified service (`app`): 
+
+```bash
+$ docker-compose run app sh -c "django-admin.py startproject app ."
+```
+
+The keywords `sh -c ""` are no stricly needed, as the command could be run just with `$ docker-compose run app ""`, however this makes it easier to differentiate the command you are running on the docker image versus the docker-compose command.
+
+The command itself what it does is use `django-admin` (which we installed via dependencies) to create a new project (because we specify `startproject`) with the name `app` in our current location, namely `.` as established on the `Dockerfile` with `WORKDIR`.
 
 
 
