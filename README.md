@@ -8,6 +8,7 @@
 4. [Setup](#setup_docker)
     1. [Install Docker](#install_docker)
     2. [Configure Docker](#configure_docker)
+    3. [Install Docker Compose](#install_compose)
 ---
 ## Description <a name="description"></a>
 
@@ -147,3 +148,25 @@ $ sudo usermod -aG docker $USER
 ```bash
 $ docker run hello-world
 ```
+
+### Install Docker Compose <a name="install_compose"></a>
+
+1. Download the current stable release of Docker Compose. Mind you, this command download the `1.29.2` version, check the [official page](https://docs.docker.com/compose/install/) for new releases.
+
+```bash
+$ sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+```
+
+2. Make the binary executable
+
+```bash
+$ sudo chmod +x /usr/local/bin/docker-compose
+```
+
+3. Test the installation
+
+```bash
+$ docker-compose --version
+docker-compose version 1.29.2, build 5becea4c
+```
+
