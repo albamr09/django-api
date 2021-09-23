@@ -5,18 +5,22 @@
 1. [Description](#description)
 2. [Technologies used](#technologies)
 3. [Principles followed](#principles)
-4. [Setup](#setup_docker)
+4. [Project Structure](#project_structure)
+5. [Setup](#setup_docker)
     1. [Install Docker](#install_docker)
     2. [Configure Docker](#configure_docker)
     3. [Install Docker Compose](#install_compose)
-5. [Project Configuration](#configure_project)
+6. [Project Configuration](#configure_project)
     1. [Dockerfile](#dockerfile)
     2. [Dependencies](#requirements)
     3. [Building Docker Image](#build)
     4. [Docker Compose](#configure_compose)
     5. [Create project](#create_project)
-    6. [Travis CI](#travis)
-    7. [Flake8](#flake8)
+    6. [Create core app](#create_core_app)
+    7. [Travis CI](#travis)
+    8. [Flake8](#flake8)
+7. [Testing](#testing)
+8. [Django cheatsheet](#django_cheatsheet)
 --- 
 ## Description <a name="description"></a>
 
@@ -57,6 +61,31 @@ Main features used:
  2. Ensure the test fails
  3. Write the feature in order for the test to pass
 - [PEP-8 best practice guidelines](https://www.python.org/dev/peps/pep-0008/)
+
+---
+
+## Project Structure <a name="project_structure"></a>
+
+```
+django-api
+└───app
+│   └─── app
+│   └─── core
+│   	 └─── tests
+│  .travis.yml 
+│  docker-compose.yml 
+│  Dockerfile 
+│  requirements.txt 
+│  README.md 
+```
+
+- `app`: 
+- `core`: Django app that contains the code important to the rest of the subapps on the system.
+- `core/tests`: This will contain all of the files with the unit tests.
+- `.travis.yml`: `Travis CI` configuration file.
+- `docker-compose.yml`: `Docker-compose` configuration file
+- `Dockerfile`: Docker image configuration file
+- `requirements.txt`: `Python` dependencies
 
 ---
 
@@ -319,8 +348,29 @@ Now we are going to execute a command to create our project:
 $ docker-compose run app sh -c "django-admin.py startproject app ."
 ```
 
+### Create core app <a name="create_core_app"></a>
 
-The command itself what it does is use `django-admin` (which we installed via dependencies) to create a new project (because we specify `startproject`) with the name `app` in our current location, namely `.` as established on the `Dockerfile` with `WORKDIR`.
+To create the core app we must execute:
+
+```console
+$ docker-compose run app sh -c "python manage.py startapp core"
+```
+
+Once it finishes we remove the files `views.py` and `tests.py` from the core folder, and create a tests folder.
+
+We also have to include the `core` app inside the installed apps list. For that we head to the `app/app/settings.py` file and specify:
+
+```python
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'core',
+]
+```
 
 ### Travis CI <a name="travis"></a>
 
@@ -387,25 +437,65 @@ exclude =
 With the `exclude` keyword, we tell Flake what directories and files to avoid when running the linting check.
 
 
-## Testing <a name="flake8"></a>
+## Testing <a name="testing"></a>
 
 In order to test our unit tests with `Django` we have to take into account the following aspects:
 
 1. The name of the file that contains the text should start with `test` in order to have `Django` pick up that said file contains tests.
 2. Also the name of the functions that execute the unit tests should also begin with `test` for the same reason.
+3. Every app/subfolder has to have an `__init__.py` in order for it to be picked up by `Django`.
 
 For executing tests we run the following command:
+
+```console
+$ docker-compose run app sh -c "python manage.py test"
+```
+
+If we also want to include the linting tool we add `flake8` as follows:
 
 ```console
 $ docker-compose run app sh -c "python manage.py test && flake8"
 ```
 
 
+## Django cheatsheet <a name="django_cheatsheet"></a>
 
+- **Start the server** 
 
+Observe that this is executed on the docker-compose config file
 
+```console
+$ python manage.py runserver 0.0.0.0:8000
+```
 
+- **Sync django settings** (`app/app/settings.py`)
 
+```console
+$ python manage.py migrate
+```
 
+On docker:
+
+```console
+$ docker-compose run app sh -c "python manage.py migrate"
+```
+
+- **Sync changes made on models**
+
+```console
+$ python manage.py makemigrations
+```
+
+On docker:
+
+```console
+$ docker-compose run app sh -c "python manage.py makemigrations"
+```
+
+You can also specify the name off the app that contains the model
+
+```console
+$ python manage.py makemigrations app_name
+```
 
 
