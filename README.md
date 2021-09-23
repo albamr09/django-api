@@ -16,6 +16,7 @@
     4. [Docker Compose](#configure_compose)
     5. [Create project](#create_project)
     6. [Travis CI](#travis)
+    7. [Flake8](#flake8)
 --- 
 ## Description <a name="description"></a>
 
@@ -71,13 +72,13 @@ In the current section we will lay out the steps to carry out in order to get do
 
 Before installing anything we will update the system as follows
 
-```bash
+```console
 $ sudo pacman -Syu
 ```
 
 When it is done updating we will proceed rebooting the system, and then we enable the loop module:
 
-```bash
+```console
 $ sudo tee /etc/modules-load.d/loop.conf <<< "loop"
 $ sudo modprobe loop
 ```
@@ -90,26 +91,26 @@ For reference go to the official [documentation](https://docs.docker.com/engine/
 
 2. Once the file is downloaded extract it executing the following command, and substituting our `docker-20.10.8` for your package's version.
 
-```bash
+```console
 $ tar xzvf docker-20.10.8.tgz
 ```
 
 3. Copy the binaries to your executable path (`/usr/bin` or `/bin`). This is **optional**.
 
 
-```bash
+```console
 $ sudo cp docker/* /usr/bin/
 ```
 
 4. Start docker's daemon:
 
-```bash
+```console
 $ sudo dockerd 
 ```
 
 5. Finally run to check that the installation was correct (it will download an example image that outputs a message informing the user that the installation was successfull, among other things).
 
-```bash
+```console
 $ sudo docker run hello-world
 ```
 
@@ -120,20 +121,20 @@ This other approach will allows to have a docker service so we do not have to al
 1. We install Docker using `pacman`:
 
 
-```bash
+```console
 $ sudo pacman -S docker 
 ```
 
 2. Afterwards, we enable the docker service executing:
 
-```bash
+```console
 $ sudo systemctl start docker.service
 $ sudo systemctl enable docker.service
 ```
 
 3. Finally run to check that the installation was correct (it will download an example image that outputs a message informing the user that the installation was successfull, among other things).
 
-```bash
+```console
 $ sudo docker run hello-world
 ```
 ### Configure Docker <a name="configure_docker"></a>
@@ -144,15 +145,15 @@ $ sudo docker run hello-world
 In order to use Docker as a normal user we need to add said user to the docker group.
 
 1. Add the Docker group
-```bash
+```console
 $ sudo groupadd docker
 ```
 2. Add your user to the Docker group
-```bash
+```console
 $ sudo usermod -aG docker $USER
 ```
 3. Log out, log in and verify that it runs properly
-```bash
+```console
 $ docker run hello-world
 ```
 
@@ -160,19 +161,19 @@ $ docker run hello-world
 
 1. Download the current stable release of Docker Compose. Mind you, this command downloads the `1.29.2` version, check the [official page](https://docs.docker.com/compose/install/) for new releases.
 
-```bash
+```console
 $ sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 ```
 
 2. Make the binary executable
 
-```bash
+```console
 $ sudo chmod +x /usr/local/bin/docker-compose
 ```
 
 3. Test the installation
 
-```bash
+```console
 $ docker-compose --version
 docker-compose version 1.29.2, build 5becea4c
 ```
@@ -256,7 +257,7 @@ This way we show that we want to install the python package called `$PKG` whose 
 
 In order to build the Docker image we just configured we must execute, on the root folder of our project (`django-api/`), the following command:
 
-```bash
+```console
 $ docker build .
 ```
 
@@ -296,7 +297,7 @@ With this we have:
 
 To build our Docker image using the Docker Compose configuration we just put together we execute (remember, on the root folder of the project)
 
-```bash
+```console
 $ docker-compose build
 ```
 
@@ -304,7 +305,7 @@ $ docker-compose build
 
 To run a shell command on our Docker container we use `docker-compose`. This allows us to run the command on the specified service (`app`): 
 
-```bash
+```console
 $ docker-compose run app sh -c "whatever command"
 ```
 
@@ -314,7 +315,7 @@ The keywords `sh -c ""` are no stricly needed, as the command could be run just 
 
 Now we are going to execute a command to create our project:
 
-```bash
+```console
 $ docker-compose run app sh -c "django-admin.py startproject app ."
 ```
 
@@ -368,6 +369,8 @@ script:
   - docker-compose run app sh -c "python manage.py test && flake8"
 ```
 
+After this, when we push our changes to the repository, under the `Branches` section for this project's repository, we will be able to see that there is already a build started (it may take some minutes to finish). While it finishes, and when it finishes, it is possible to check the jobs executed by the server under `Job Log`
+
 ### Flake8 <a name="flake8"></a>
 
 We will use this linting tool to check whether we are following the `PEP-8` convention. For that we need to specify it as a `Python` dependency (refer to the dependency list) and create a configuration file inside the source code folder (`app/.flake8`).
@@ -384,7 +387,18 @@ exclude =
 With the `exclude` keyword, we tell Flake what directories and files to avoid when running the linting check.
 
 
+## Testing <a name="flake8"></a>
 
+In order to test our unit tests with `Django` we have to take into account the following aspects:
+
+1. The name of the file that contains the text should start with `test` in order to have `Django` pick up that said file contains tests.
+2. Also the name of the functions that execute the unit tests should also begin with `test` for the same reason.
+
+For executing tests we run the following command:
+
+```console
+$ docker-compose run app sh -c "python manage.py test && flake8"
+```
 
 
 
