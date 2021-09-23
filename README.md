@@ -248,8 +248,9 @@ This way we show that we want to install the python package called `$PKG` whose 
 
 | Name   | Version  |
 |--------|:---------:|
-| **Django** | >= 2.2.4, < 2.3.0|
-| **Django Rest Framework** | >= 3.11.2, < 3.12.0|
+| **Django** | >=3.2.7,< 3.3.0 |
+| **Django Rest Framework** | >=3.12.4,< 3.13.0 |
+| **Flake8** | >=3.9.2, < 3.10.0 |
 
 ### Building Docker Image <a name="build"></a>
 
@@ -330,6 +331,67 @@ This continuous integration tool will let us run tests and checks on our project
 	2. To view the list of selected repositories go to https://app.travis-ci.com/account/repositories. 
 
 #### Configuration file
+
+This file, denoted by `.travis.yml` and located on the project's root directory, tells `Travis CI` what to do when pushing code to the `github` repository.
+
+1. We specify the language we are going to be running Travis CI on
+
+```yml
+language: python
+```
+2. We define the version of `Python` to use:
+
+```yml
+python:
+  - "3.6"
+```
+
+This version differs from the Docker container `python` version, which is `3.7`. However this does not matter because we are only using the Travis CI server to run the Docker image, which has the correct version. 
+
+3. Now we specify the services to use, which will only be docker, the rest of the services are specified within the docker compose config file.
+
+```yml
+services:
+  - docker
+```
+
+4. Next we specify all the actions needed before executing the automated tests:
+
+```yml
+before_script: pip install docker-compose
+```
+
+5. And finally we run the tests and the linting with docker compose:
+
+```yml
+script:
+  - docker-compose run app sh -c "python manage.py test && flake8"
+```
+
+### Flake8 <a name="flake8"></a>
+
+We will use this linting tool to check whether we are following the `PEP-8` convention. For that we need to specify it as a `Python` dependency (refer to the dependency list) and create a configuration file inside the source code folder (`app/.flake8`).
+
+```
+[flake8]
+exclude = 
+	migrations,
+	__pycache__,
+	manage.py,
+	settings.py
+```
+
+With the `exclude` keyword, we tell Flake what directories and files to avoid when running the linting check.
+
+
+
+
+
+
+
+
+
+
 
 
 
