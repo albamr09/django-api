@@ -458,7 +458,24 @@ $ docker-compose run app sh -c "python manage.py test && flake8"
 ```
 
 
-## Django cheatsheet <a name="django_cheatsheet"></a>
+## Django documentation <a name="django_cheatsheet"></a>
+
+In this section we lay out some concepts about the `Django Framework` pertaining our project.
+
+### Apps
+
+### Models
+
+The models can be thought of as objects, in the sense of OOP, that have certain attributes. This objects are then mapped by Django to the database of choice.
+To define new models, or modify existing model (e.g. the user model) you need to modify the `models.py` file in the root folder of every app that is created. 
+Specifically when modifying existing models, you will need to extend the classes defined by `Django` (e.g. `AbstractBaseUser`, `UserAdmin`).
+
+### Admin
+
+This is the feature that allows you to manage your models, let it be create them, modify them or delete them.
+The functionality of the admin model is defined within the `admin.py` file on the root folder of every app that is created.
+
+### Actions
 
 - **Start the server** 
 
