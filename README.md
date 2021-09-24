@@ -313,14 +313,36 @@ services:
       - ./app:/app
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=app
+      - DB_USER=postgres
+      - DB_PASS=plaintextpassword
+    depends_on:
+      - db
 ```
 
 With this we have:
 - Defined the service called app, whose build context will be the `WORKDIR` (`./`). 
 - Mapped the port `8000` of our local machine to the port `8000` of the Docker image. 
 - For live updating the local changes to our source code to the source code on the Docker image we use `volumes` which maps the local source code folder `./app` to the one on the virtual machine `/app`. 
-- Finally, to run our application in our Docker container we use the keywork `command`. (NOTE: we use `>` so the command is on its own separate line). 
+- In order to run our application in our Docker container we use the keywork `command`. (NOTE: we use `>` so the command is on its own separate line). 
 	- The command runs the Django development server available on all the IP addresses that run on the Docker container (`0.0.0.0`) on port `8000`, which is mapped to port `8000` in our local machine.
+- We also define some environment variables pertaining the database: the service name (`db`), the database name, the database user and its password.
+- Next we list our app dependencies, regarding other services. This means that, for example the service `db`, this service will start before the `app` service and the database service will be available on the network when you connect to the hostname `db`.
+
+After that we define the database service:
+
+```yml
+  db:
+    image: postgres:10-alpine
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=plaintextpassword
+```
+
+This database service specifies that docker should pull the `postgres` image with the `10-alpine` tag from the `docker hub`. And then we set some environmental variables: the database name, the user and its password. This password will only be used on the development bulid, on the production build the password would be encrypted.
 
 #### Build
 
