@@ -553,6 +553,28 @@ Specifically when modifying existing models, you will need to extend the classes
 This is the feature that allows you to manage your models, let it be create them, modify them or delete them.
 The functionality of the admin model is defined within the `admin.py` file on the root folder of every app that is created.
 
+In order to create a superuser execute the following command:
+
+```console
+$ python manage.py createsuperuser
+```
+
+On Docker:
+
+```console
+$ docker-compose run app sh -c "python manage.py createsuperuser"
+```
+
+Then, you will be prompted to enter an email and a password. Once you have filled said fields, you can start the server with 
+
+
+```console
+$ docker-compose up
+```
+
+And enter to the admin page located on `127.0.0.1:8000/admin`, where you can log in with your credentials.
+
+
 ### Actions
 
 - **Start the server** 
