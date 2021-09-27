@@ -17,10 +17,11 @@
     4. [Docker Compose](#configure_compose)
     5. [Create project](#create_project)
     6. [Create core app](#create_core_app)
-    7. [Travis CI](#travis)
-    8. [Flake8](#flake8)
+    7. [Databases](#databases_django)
+    8. [Travis CI](#travis)
+    9. [Flake8](#flake8)
 7. [Testing](#testing)
-8. [Django cheatsheet](#django_cheatsheet)
+8. [Django documentation](#django_documentation)
 --- 
 ## Description <a name="description"></a>
 
@@ -241,10 +242,33 @@ ENV PYTHONUNBUFFERED 1
 COPY ./requirements.txt /requirements.txt
 ```
 
-Now, in order to install all of these depedencies into the Docker image we use pip, running the next command on the virtual machine:
+Because in our `requirements.txt` we have included the package that allows for communication to take place between `Postgres` and `Django` we also have to tell `Docker` to install the `PostgreSQL` client. For that we include the following line in the config file:
+
+```dockerfile
+RUN apk add --update --no-cache postgresql-client
+```
+
+This line executes `apk`, that is alpine's package manager, and install the postgresql-client package. Note that we have added two optional arguments: `--update` (which is abbreviated from `--update-cache`, and updates the package list to get the latest list of available packages), and `--no-cache` (which allows us to not cache the index locally (`/var/cache/apk`) and keeps the container small). 
+
+We also have to install the dependencies related to python dependencies:
+
+```dockerfile
+RUN apk add --update --no-cache --virtual .tmp-build-deps \
+	gcc libc-dev linux-headers postgresql-dev
+```
+
+Observe that we have added the option `--virtual`, which allows us to set up an alias for the temporary dependencies required to install the python dependencies.
+
+Now, in order to install all the python depedencies into the Docker image we use pip, running the next command on the virtual machine:
 
 ```dockerfile
 RUN pip install -r /requirements.txt
+```
+
+Once the python dependecies are installed, we can remove the temporary dependencies by using the alias we specified earlier:
+
+```dockerfile
+RUN apk del .tmp-build-deps
 ```
 
 5. **Application source code**: we create a directory to store our source code, and we tell Docker that this directory is the default directory, and every app will run from said directory
@@ -281,6 +305,10 @@ This way we show that we want to install the python package called `$PKG` whose 
 | **Django** | >=3.2.7,< 3.3.0 |
 | **Django Rest Framework** | >=3.12.4,< 3.13.0 |
 | **Flake8** | >=3.9.2, < 3.10.0 |
+| **Psycopg2** | >=2.9.1, < 2.10.0 |
+
+- `Flake8`: linting tool.
+- `psycopg2`: tool that allows Django to communicate with postgres.
 
 ### Building Docker Image <a name="build"></a>
 
@@ -312,7 +340,9 @@ services:
     volumes:
       - ./app:/app
     command: >
-      sh -c "python manage.py runserver 0.0.0.0:8000"
+      sh -c "python manage.py wait_for_db &&
+              python manage.py migrate &&
+              python manage.py runserver 0.0.0.0:8000"
     environment:
       - DB_HOST=db
       - DB_NAME=app
@@ -327,6 +357,8 @@ With this we have:
 - Mapped the port `8000` of our local machine to the port `8000` of the Docker image. 
 - For live updating the local changes to our source code to the source code on the Docker image we use `volumes` which maps the local source code folder `./app` to the one on the virtual machine `/app`. 
 - In order to run our application in our Docker container we use the keywork `command`. (NOTE: we use `>` so the command is on its own separate line). 
+	- First we execute our custom command `wait_for_db`, that is defined on `app/core/management/commands/wait_for_db.py` and that waits for the database to be ready before starting the server. Note that this commands needs to be defined somewhere, else docker-compose will fail to start.
+	- Then we migrate our database in case there are any tables that need to be created with `python manage.py migrate`.
 	- The command runs the Django development server available on all the IP addresses that run on the Docker container (`0.0.0.0`) on port `8000`, which is mapped to port `8000` in our local machine.
 - We also define some environment variables pertaining the database: the service name (`db`), the database name, the database user and its password.
 - Next we list our app dependencies, regarding other services. This means that, for example the service `db`, this service will start before the `app` service and the database service will be available on the network when you connect to the hostname `db`.
@@ -350,6 +382,12 @@ To build our Docker image using the Docker Compose configuration we just put tog
 
 ```console
 $ docker-compose build
+```
+
+#### Run
+
+```console
+$ docker-compose up
 ```
 
 #### Run commands
@@ -393,6 +431,24 @@ INSTALLED_APPS = [
     'core',
 ]
 ```
+
+### Databases <a name="databases_django"></a>
+
+Once we have set up Docker, we can go ahead and configure our `Django` project to use our `postgres` database. For that we have to head to `app/app/settings.py`, and there we edit the `DATABASES` section as follows:
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'HOST': os.environ.get('DB_HOST'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASS')
+    }
+}
+```
+
+Here we tell django that we are going to be using `postgres` as the database manager. The we pull from the environment variables defined within our `Dockerfile` the database's host, name, user and password.
 
 ### Travis CI <a name="travis"></a>
 
@@ -480,7 +536,7 @@ $ docker-compose run app sh -c "python manage.py test && flake8"
 ```
 
 
-## Django documentation <a name="django_cheatsheet"></a>
+## Django documentation <a name="django_documentation"></a>
 
 In this section we lay out some concepts about the `Django Framework` pertaining our project.
 
