@@ -18,10 +18,11 @@
     5. [Create project](#create_project)
     6. [Create core app](#create_core_app)
     7. [Create user app](#create_user_app)
-    8. [Installed apps](#installed_apps)
-    9. [Databases](#databases_django)
-    10. [Travis CI](#travis)
-    11. [Flake8](#flake8)
+    8. [Create book app](#create_book_app)
+    9. [Installed apps](#installed_apps)
+    10. [Databases](#databases_django)
+    11. [Travis CI](#travis)
+    12. [Flake8](#flake8)
 7. [Testing](#testing)
 8. [Django documentation](#django_documentation)
 --- 
@@ -436,6 +437,16 @@ $ docker-compose run app sh -c "python manage.py startapp user"
 
 Once it finishes we remove the files `admin.py` and `models.py`, because they are already defined on the `core` app. Then, we also remove the folder `migrations` and the file `tests.py`, and create a tests folder. We also add the `serializers.py` and the `urls.py` files.
 
+### Create book app <a name="create_book_app"></a>
+
+To create the books app we must execute:
+
+```console
+$ docker-compose run app sh -c "python manage.py startapp book"
+```
+
+Once it finishes we remove the files `admin.py` and `models.py`, because they are already defined on the `core` app. Then, we also remove the folder `migrations` and the file `tests.py`, and create a tests folder. We also add the `serializers.py` and the `urls.py` files.
+
 ### Installed apps <a name="installed_apps"></a>
 
 When we have created all the apps necessary, we have to include them inside the installed apps list. For that we head to the `app/app/settings.py` file and specify:
@@ -452,6 +463,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'core',
     'user',
+    'book',
 ]
 ```
 
@@ -570,8 +582,75 @@ In this section we lay out some concepts about the `Django Framework` pertaining
 ### Models
 
 The models can be thought of as objects, in the sense of OOP, that have certain attributes. This objects are then mapped by Django to the database of choice.
-To define new models, or modify existing model (e.g. the user model) you need to modify the `models.py` file in the root folder of every app that is created. 
-Specifically when modifying existing models, you will need to extend the classes defined by `Django` (e.g. `AbstractBaseUser`, `UserAdmin`).
+To define new models, or modify existing model (e.g. the user model) you need to modify the `models.py` file in the root folder of every app that is created. Alternatively, you can centralize all of your models on the `core` app.
+
+An example of a simple model is the following `Tag` model:
+
+```python
+class Tag(models.Model):
+    """Tag to be used for a book"""
+    # Define the attributes of the table
+    name = models.CharField(max_length=255)
+    # Define the relation between the tag and the user
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    # Define the string representation of the Tag
+    def __str__(self):
+        return self.name
+```
+
+Once the model is define, it needs to be registered on the `admin.py` file:
+
+```python
+admin.site.register(models.Tag)
+```
+
+Specifically when modifying existing models, you will need to extend the classes defined by `Django` (e.g. `AbstractBaseUser`, `UserAdmin`). For example:
+
+```python
+class User(AbstractBaseUser, PermissionsMixin):
+    """Custom user model that suppors using email instead of username"""
+    email = models.EmailField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+```
+
+Which has to be registered as follows:
+
+```python
+admin.site.register(models.User, UserAdmin)
+```
+
+Where `UserAdmin` is a class define in the `admin.py` file, that defines the custom `User` model:
+
+```python
+class UserAdmin(BaseUserAdmin):
+    ordering = ['id']
+    list_display = ['email', 'name']
+    # User edit page fields
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        (_('Personal Info'), {'fields': ('name',)}),
+        (
+            _('Permissions'),
+            {'fields': ('is_active', 'is_staff', 'is_superuser')}
+        ),
+        (_('Important Dates'), {'fields': ('last_login',)})
+    )
+    # User create page fields
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password', 'password2')
+        }),
+```
 
 ### Admin
 
