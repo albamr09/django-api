@@ -17,9 +17,11 @@
     4. [Docker Compose](#configure_compose)
     5. [Create project](#create_project)
     6. [Create core app](#create_core_app)
-    7. [Databases](#databases_django)
-    8. [Travis CI](#travis)
-    9. [Flake8](#flake8)
+    7. [Create user app](#create_user_app)
+    8. [Installed apps](#installed_apps)
+    9. [Databases](#databases_django)
+    10. [Travis CI](#travis)
+    11. [Flake8](#flake8)
 7. [Testing](#testing)
 8. [Django documentation](#django_documentation)
 --- 
@@ -418,7 +420,19 @@ $ docker-compose run app sh -c "python manage.py startapp core"
 
 Once it finishes we remove the files `views.py` and `tests.py` from the core folder, and create a tests folder.
 
-We also have to include the `core` app inside the installed apps list. For that we head to the `app/app/settings.py` file and specify:
+### Create user app <a name="create_user_app"></a>
+
+To create the user app we must execute:
+
+```console
+$ docker-compose run app sh -c "python manage.py startapp core"
+```
+
+Once it finishes we remove the files `admin.py` and `models.py`, because they are already defined on the `core` app. Then, we also remove the folder `migrations` and the file `tests.py`, and create a tests folder.
+
+### Installed apps <a name="installed_apps"></a>
+
+When we have created all the apps necessary, we have to include them inside the installed apps list. For that we head to the `app/app/settings.py` file and specify:
 
 ```python
 INSTALLED_APPS = [
@@ -428,9 +442,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken'
     'core',
+    'user',
 ]
 ```
+
+Observe that we have included the necessary django frameworks and modules. To be more precise we have added the `Django Rest Framework` with `rest_framework` and the authetication module with `rest_framework.authtoken`.
 
 ### Databases <a name="databases_django"></a>
 
