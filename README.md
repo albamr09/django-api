@@ -402,6 +402,12 @@ $ docker-compose run app sh -c "whatever command"
 
 The keywords `sh -c ""` are no stricly needed, as the command could be run just with `$ docker-compose run app ""`, however this makes it easier to differentiate the command you are running on the docker image versus the docker-compose command.
 
+We can also add the --rm option to make sure the container does not remained on the system when finished.
+
+```console
+$ docker-compose run --rm app sh -c "whatever command"
+```
+
 ### Create project <a name="create_project"></a>
 
 Now we are going to execute a command to create our project:
@@ -425,10 +431,10 @@ Once it finishes we remove the files `views.py` and `tests.py` from the core fol
 To create the user app we must execute:
 
 ```console
-$ docker-compose run app sh -c "python manage.py startapp core"
+$ docker-compose run app sh -c "python manage.py startapp user"
 ```
 
-Once it finishes we remove the files `admin.py` and `models.py`, because they are already defined on the `core` app. Then, we also remove the folder `migrations` and the file `tests.py`, and create a tests folder.
+Once it finishes we remove the files `admin.py` and `models.py`, because they are already defined on the `core` app. Then, we also remove the folder `migrations` and the file `tests.py`, and create a tests folder. We also add the `serializers.py` and the `urls.py` files.
 
 ### Installed apps <a name="installed_apps"></a>
 
@@ -593,6 +599,103 @@ $ docker-compose up
 
 And enter to the admin page located on `127.0.0.1:8000/admin`, where you can log in with your credentials.
 
+### URLs
+
+Django allows us to define relative urls on a very modular way. First off, we have the core file when it comes to url definition: `app/app/urls.py`. Here we may have something like this:
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/user/', include('user.urls')),
+]
+```
+
+This example shows that the `urlpatterns` variable is a list that holds all of the urls defined in our project. The modularization comes from the way the urls defined on the user's app are specified. First we specify the endpoint for these urls (namely `api/user/`), and then we pull all the relative urls from the user's app, defined on the file `app/user/urls.py`. Which are then concatenated with `api/user/`. 
+
+The urls defined on the user app are as follows:
+
+```python
+app_name = 'user'
+
+urlpatterns = [
+    path('create/', views.CreateUserView.as_view(), name='create'),
+]
+```
+
+This the can be used like this:
+
+```python
+# Create user api endpoint dinamically
+CREATE_USER_URL = reverse('user:create')
+```
+
+### Serializers
+
+This files are defined to specify how to serialize (map to the database) the JSON objects received, in our case, from HTTP requests. For that we create, for each model, a class that extends `serializers.ModelSerializer`. In this class we define an inner class called `Meta` that tells the framework which fields does the object have and so allows the mapping to take place. You can also add extra arguments to this inner class, for example to restrict or exersise a stronger control on the fields.
+
+Next on, we have a simple example of our User Model serializer:
+
+```python
+from django.contrib.auth import get_user_model
+
+from rest_framework import serializers
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for the users object"""
+
+    class Meta:
+        """Info about how to serialize the user model"""
+        model = get_user_model()
+        fields = ('email', 'password', 'name')
+        # Extra requirements for the user model
+        extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
+
+    def create(self, validated_data):
+        """Create a new user with encrypted password and return it"""
+        # validation_data: JSON data passed in the HTTP POST
+        return get_user_model().objects.create_user(**validated_data)
+```
+
+We can also serialize an object that is not related to a model per se, for example:
+
+```python
+class AuthTokenSerializer(serializers.Serializer):
+    """Serializer for the user authentication object"""
+    email = serializers.CharField()
+    password = serializers.CharField(
+        style={'input_type': 'password'},
+        trim_whitespace=False
+    )
+```
+
+### Views
+
+This is, on simple terms, a `Python` function that takes a Web request and returns a Web response. In our case, we will mostly use views for our API, so we use pre-make view that allows us to easily make an API that creates, updates, etc an object on the database using the serializer that we specify, for example, the API for creating a user is as follows:
+
+```python
+class CreateUserView(generics.CreateAPIView):
+    """Create a new user in the system"""
+    serializer_class = UserSerializer
+```
+
+In case of wanting to update an object we extend `generics.RetrieveUpdateAPIView` instead of `generics.CreateAPIView`. Because this view is private, we need to indicate an authentication mechanism and the level of permissions the user has, in our case the authentication is made via `token` and the permissions are that the user needs to be logged in.
+
+```python
+class ManageUserView(generics.RetrieveUpdateAPIView):
+    """Manage the authenticated user"""
+    serializer_class = UserSerializer
+    # Authentication mechanism by which the authentication happens
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        """Retrieve and return authentication user"""
+        return self.request.user
+```
 
 ### Actions
 
