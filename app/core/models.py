@@ -52,3 +52,18 @@ class Tag(models.Model):
     # Define the string representation of the Tag
     def __str__(self):
         return self.name
+
+
+class Author(models.Model):
+    """Author of a book"""
+    # Define the attributes of the table
+    name = models.CharField(max_length=255)
+    # Define the relation between the tag and the user
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    # Define the string representation of the Author
+    def __str__(self):
+        return self.name
