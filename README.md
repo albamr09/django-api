@@ -124,14 +124,22 @@ django-api
 
 Go to the [Set Up](./docs/SetUp.md) documentation page.
 
+---
+
 ## Project Configuration <a name="configure_project"></a>
 
 Go to the [Configuration](./docs/Configuration.md) documentation page.
+
+---
 
 ## Testing <a name="testing"></a>
 
 Go to the [Testing](./docs/Testing.md) documentation page.
 
+---
+
 ## Django Notes <a name="django_documentation"></a>
 
 Go to the [Django Notes](./docs/DjangoDocs.md) page.
+
+---
