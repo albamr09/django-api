@@ -205,3 +205,53 @@ class PrivateBookApiTests(TestCase):
         self.assertEqual(authors.count(), 2)
         self.assertIn(author1, authors)
         self.assertIn(author2, authors)
+
+    def test_partial_update_book(self):
+        """Test updating a book with patch"""
+        # Create book
+        book = sample_book(user=self.user)
+        # Add tags
+        book.tags.add(sample_tag(user=self.user))
+        # Create new tag
+        new_tag = sample_tag(user=self.user, name='Gore')
+
+        # Make HTTP request to update book tags (patch)
+        payload = {'title': 'Tikka', 'tags': [new_tag.id]}
+        url = detail_url(book.id)
+        self.client.patch(url, payload)
+
+        # Update book object information
+        book.refresh_from_db()
+        # Check that the attributes match
+        self.assertEqual(book.title, payload['title'])
+        tags = book.tags.all()
+        self.assertEqual(len(tags), 1)
+        self.assertIn(new_tag, tags)
+
+    def test_full_update_book(self):
+        """Test updating a book with put"""
+        # Create book
+        book = sample_book(user=self.user)
+        # Add tags
+        book.tags.add(sample_tag(user=self.user))
+        # Define new attributes
+        payload = {
+            'title': 'The idiot',
+            'pages': 400,
+            'year': 1992,
+            'price': 5.00
+        }
+
+        # Make HTTP request to update book (put)
+        url = detail_url(book.id)
+        self.client.put(url, payload)
+
+        # Refresh book object info
+        book.refresh_from_db()
+        # Check that the attributes match
+        self.assertEqual(book.title, payload['title'])
+        self.assertEqual(book.pages, payload['pages'])
+        self.assertEqual(book.year, payload['year'])
+        self.assertEqual(book.price, payload['price'])
+        tags = book.tags.all()
+        self.assertEqual(len(tags), 0)
