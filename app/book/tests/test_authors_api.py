@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Author
+from core.models import Author, Book
 
 from book.serializers import AuthorSerializer
 
@@ -78,8 +78,8 @@ class PrivateAuthorsApiTests(TestCase):
         # Check that the author is the one created by user
         self.assertEqual(res.data[0]['name'], author.name)
 
-    def test_create_ingredient_successful(self):
-        """Test create a new ingredient"""
+    def test_create_author_successful(self):
+        """Test create a new author"""
         # Define authors attributes
         payload = {'name': 'Margit'}
         # Make HTTP request to create author
@@ -92,10 +92,71 @@ class PrivateAuthorsApiTests(TestCase):
         ).exists()
         self.assertTrue(exists)
 
-    def test_create_ingredient_invalid(self):
-        """Test creating invalid ingredient fails"""
+    def test_create_author_invalid(self):
+        """Test creating invalid author fails"""
         payload = {'name': ''}
         res = self.client.post(AUTHOR_URL, payload)
 
         # Check that the request failed
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_authors_assigned_to_books(self):
+        """Test filtering authors by those assigned to books"""
+        # Create authors
+        author1 = Author.objects.create(
+            user=self.user, name='Tolkien'
+        )
+        author2 = Author.objects.create(
+            user=self.user, name='Ghandi'
+        )
+        # Create book
+        book = Book.objects.create(
+            title='Cinderella',
+            pages=100,
+            year=1854,
+            price=10,
+            user=self.user
+        )
+        # Add autho to book
+        book.authors.add(author1)
+
+        # Make HTTP request to get authors assigned to at
+        # least a book
+        res = self.client.get(AUTHOR_URL, {'assigned_only': 1})
+
+        # Get JSON for author objects
+        serializer1 = AuthorSerializer(author1)
+        serializer2 = AuthorSerializer(author2)
+        # Check that only the first author is on the response
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
+
+    def test_retrieve_authors_assigned_unique(self):
+        """Test filtering authors by assigned returns unique items"""
+        # Create two authors
+        author = Author.objects.create(user=self.user, name='Pablo Neruda')
+        Author.objects.create(user=self.user, name='Fiona Barton')
+        # Create books and add authors
+        book1 = Book.objects.create(
+            title='The Great Gatsby',
+            pages=300,
+            year=1974,
+            price=12.00,
+            user=self.user
+        )
+        book1.authors.add(author)
+        book2 = Book.objects.create(
+            title='Gulag',
+            pages=243,
+            year=1904,
+            price=5.00,
+            user=self.user
+        )
+        book2.authors.add(author)
+
+        # Make HTTP request to get authors assigned to at least
+        # one book
+        res = self.client.get(AUTHOR_URL, {'assigned_only': 1})
+
+        # Check that only one author is returned
+        self.assertEqual(len(res.data), 1)

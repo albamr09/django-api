@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tag
+from core.models import Tag, Book
 
 from book.serializers import TagSerializer
 
@@ -104,3 +104,60 @@ class PrivateTagsApiTests(TestCase):
 
         # Chech that the request failed
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_tags_assigned_to_books(self):
+        """Test filtering tags by those assigned to books"""
+        # Create tags
+        tag1 = Tag.objects.create(user=self.user, name='Historical')
+        tag2 = Tag.objects.create(user=self.user, name='Biography')
+        # Create book with tags
+        book = Book.objects.create(
+            title='Tom Clancy',
+            pages=100,
+            year=1995,
+            price=5.00,
+            user=self.user
+        )
+        book.tags.add(tag1)
+
+        # Make HTTP request to get tags that are linked to
+        # at least one book
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        # Get JSON for the tag objects
+        serializer1 = TagSerializer(tag1)
+        serializer2 = TagSerializer(tag2)
+        # Check that only the tag1 is returned
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
+
+    def test_retrieve_tags_assigned_unique(self):
+        """Test filtering tags by assigned returns unique items"""
+        # Create tag
+        tag = Tag.objects.create(user=self.user, name='Mistery')
+        Tag.objects.create(user=self.user, name='Crime')
+        # Create book and add tag
+        book1 = Book.objects.create(
+            title='The Handmaid\'s tale',
+            pages=300,
+            year=1992,
+            price=3.00,
+            user=self.user
+        )
+        book1.tags.add(tag)
+        # Create book and add tag
+        book2 = Book.objects.create(
+            title='Why Karl Marx Was Right',
+            pages=500,
+            year=1900,
+            price=2.00,
+            user=self.user
+        )
+        book2.tags.add(tag)
+
+        # Make HTTP request to get tags that are linked to
+        # at least one book
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        # Check that only one tag is received
+        self.assertEqual(len(res.data), 1)

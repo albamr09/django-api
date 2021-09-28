@@ -17,13 +17,25 @@ class BaseBookAttrViewSet(viewsets.GenericViewSet,
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        """Override the get_queryset function and specify to return objects
-        for the current authenticated user only"""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        """Return objects for the current authenticated user only"""
+        # Check if the parameter assigned_only is on the request
+        assigned_only = bool(
+            int(self.request.query_params.get('assigned_only', 0))
+        )
+        # Make copy of queryset so we do not modify the original
+        queryset = self.queryset
+        # If the parameter was passed filter on the book not
+        # being specified
+        if assigned_only:
+            queryset = queryset.filter(book__isnull=False)
+
+        # Remove duplicates
+        return queryset.filter(
+            user=self.request.user
+        ).order_by('-name').distinct()
 
     def perform_create(self, serializer):
-        """Override the function that creates the object"""
-        # Add user to the attributes of the object
+        """Create a new object"""
         serializer.save(user=self.request.user)
 
 
