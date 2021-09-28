@@ -266,6 +266,64 @@ class PrivateBookApiTests(TestCase):
         tags = book.tags.all()
         self.assertEqual(len(tags), 0)
 
+    def test_filter_books_by_tags(self):
+        """Test returning books with specific tags"""
+        # Create books
+        book1 = sample_book(user=self.user, title='Sample book')
+        book2 = sample_book(user=self.user, title='Greek mythology')
+        # Create tags
+        tag1 = sample_tag(user=self.user, name='Physics')
+        tag2 = sample_tag(user=self.user, name='Comedy')
+        # Add tags to books
+        book1.tags.add(tag1)
+        book2.tags.add(tag2)
+        # Create new book
+        book3 = sample_book(user=self.user, title='Mathematics for ML')
+
+        # Make HTTP request filtering by tag1 and tag2
+        res = self.client.get(
+            BOOKS_URL,
+            {'tags': f'{tag1.id},{tag2.id}'}
+        )
+
+        # Get JSON for the book objects
+        serializer1 = BookSerializer(book1)
+        serializer2 = BookSerializer(book2)
+        serializer3 = BookSerializer(book3)
+        # Check that only book1 and book2 were in the response
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
+
+    def test_filter_books_by_authors(self):
+        """Test returning books with specific authors"""
+        # Create books
+        book1 = sample_book(user=self.user, title='Mediterranean agriculture')
+        book2 = sample_book(user=self.user, title='WWII')
+        # Create authors
+        author1 = sample_author(user=self.user, name='Isabel Allende')
+        author2 = sample_author(user=self.user, name='Pablo Neruda')
+        # Add authors to books
+        book1.authors.add(author1)
+        book2.authors.add(author2)
+        # Create new book without authors
+        book3 = sample_book(user=self.user, title='Steak and mushrooms')
+
+        # Make HTTP request filtering by the authors created
+        res = self.client.get(
+            BOOKS_URL,
+            {'authors': f'{author1.id},{author2.id}'}
+        )
+
+        # Get the JSON for the book objects
+        serializer1 = BookSerializer(book1)
+        serializer2 = BookSerializer(book2)
+        serializer3 = BookSerializer(book3)
+        # Check that only book1 and book were is the response
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
+
 
 class BookImageUploadTests(TestCase):
 
