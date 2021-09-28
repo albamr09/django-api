@@ -1,3 +1,8 @@
+import tempfile
+import os
+
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -11,6 +16,11 @@ from book.serializers import BookSerializer, BookDetailSerializer
 
 
 BOOKS_URL = reverse('book:book-list')
+
+
+def image_upload_url(book_id):
+    """Return URL for book image upload"""
+    return reverse('book:book-upload-image', args=[book_id])
 
 
 def detail_url(book_id):
@@ -255,3 +265,53 @@ class PrivateBookApiTests(TestCase):
         self.assertEqual(book.price, payload['price'])
         tags = book.tags.all()
         self.assertEqual(len(tags), 0)
+
+
+class BookImageUploadTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        # Create and authenticate user
+        self.user = get_user_model().objects.create_user(
+            'user@email.com',
+            'testpass'
+        )
+        self.client.force_authenticate(self.user)
+        # Create book
+        self.book = sample_book(user=self.user)
+
+    def tearDown(self):
+        # Remove image after test
+        self.book.image.delete()
+
+    def test_upload_image_to_book(self):
+        """Test uploading an email to book"""
+        # Get url for book id
+        url = image_upload_url(self.book.id)
+        # Create temporary image that is removed when finished
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            # Black square 10x10 px
+            img = Image.new('RGB', (10, 10))
+            img.save(ntf, format='JPEG')
+            # Set pointer to the beginning of the file
+            ntf.seek(0)
+            # Make HTTP request to save the image
+            res = self.client.post(url, {'image': ntf}, format='multipart')
+
+        # Update info about book
+        self.book.refresh_from_db()
+        # Check that the request was successfull
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Check that the image has been uploaded
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.book.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        # Get book url for book id
+        url = image_upload_url(self.book.id)
+        # Upload image
+        res = self.client.post(url, {'image': 'notimage'}, format='multipart')
+
+        # Check that the request fails
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

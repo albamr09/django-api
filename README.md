@@ -245,19 +245,19 @@ ENV PYTHONUNBUFFERED 1
 COPY ./requirements.txt /requirements.txt
 ```
 
-Because in our `requirements.txt` we have included the package that allows for communication to take place between `Postgres` and `Django` we also have to tell `Docker` to install the `PostgreSQL` client. For that we include the following line in the config file:
+Because in our `requirements.txt` we have included the package that allows for communication to take place between `Postgres` and `Django` we also have to tell `Docker` to install the `PostgreSQL` client. Furthermore, the `jpeg-dev` pakage is needed to make use of images within python, to be more precise, to use the `Pillow` package, referenced lated. For that we include the following line in the config file:
 
 ```dockerfile
-RUN apk add --update --no-cache postgresql-client
+RUN apk add --update --no-cache postgresql-client jpeg-dev
 ```
 
 This line executes `apk`, that is alpine's package manager, and install the postgresql-client package. Note that we have added two optional arguments: `--update` (which is abbreviated from `--update-cache`, and updates the package list to get the latest list of available packages), and `--no-cache` (which allows us to not cache the index locally (`/var/cache/apk`) and keeps the container small). 
 
-We also have to install the dependencies related to python dependencies:
+We also have to install the temporary dependencies related to python dependencies:
 
 ```dockerfile
 RUN apk add --update --no-cache --virtual .tmp-build-deps \
-	gcc libc-dev linux-headers postgresql-dev
+	gcc libc-dev linux-headers postgresql-dev musl-dev zlib zlib-dev
 ```
 
 Observe that we have added the option `--virtual`, which allows us to set up an alias for the temporary dependencies required to install the python dependencies.
@@ -282,12 +282,27 @@ WORKDIR /app
 COPY ./app /app
 ```
 
-6. **User creation**: in this step we create the user that will run the application
+6. **Media folder creation**: before creating the user, we will create two new folders, one for media that the user uploads (`/vol/web/media`) and one for static files, such as `css` or `javascript` files (`/vol/web/static`). 
+
+```dockerfile
+RUN mkdir -p /vol/web/media
+RUN mkdir -p /vol/web/static
+```
+
+7. **User creation**: in this step we create the user that will run the application
 
 ```dockerfile
 RUN adduser -D user
+```
+
+8. **Permission management**: note that we also have to give permissions to the user to use the directories we created before, for that we specify:
+
+```dockerfile
+RUN chown -R user:user /vol/
+RUN chmod -R 755 /vol/web
 USER user
 ```
+
 
 This is done for security porpuses, otherwise the application is run as `root`, which is never recommended.
 
@@ -309,9 +324,11 @@ This way we show that we want to install the python package called `$PKG` whose 
 | **Django Rest Framework** | >=3.12.4,< 3.13.0 |
 | **Flake8** | >=3.9.2, < 3.10.0 |
 | **Psycopg2** | >=2.9.1, < 2.10.0 |
+| **Pillow** | >=8.3.2,< 8.4.0 |
 
 - `Flake8`: linting tool.
 - `psycopg2`: tool that allows Django to communicate with postgres.
+- `Pillow`: tool used for manipulating images.
 
 ### Building Docker Image <a name="build"></a>
 
@@ -323,7 +340,7 @@ $ docker build .
 
 ### Docker Compose <a name="configure_compose"></a>
 
-This tool allows us to manage easily the different services (e.g. python app, database, etc.) that make up our project. For that, we will need to make a Docker Compose configuration file denoted by `docker-compose.yml` that sits in the root folder of the project that sits in the root folder of the project.
+This tool allows us to manage easily the different services (e.g. python app, database, etc.) that make up our project. For that, we will need to make a Docker Compose configuration file denoted by `docker-compose.yml` that sits in the root folder of the project.
 
 On the first line we define the version of Docker Compose for this configuration file:
 
@@ -486,6 +503,33 @@ DATABASES = {
 ```
 
 Here we tell django that we are going to be using `postgres` as the database manager. The we pull from the environment variables defined within our `Dockerfile` the database's host, name, user and password.
+
+### Static Content and Media
+
+If we want to serve static content o media files, we have to tell `Django` where to serve them. For that we define two variables in `app/app/settings.py` that contain the endpoints within our server that contain static content or media files.
+
+```python
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+```
+
+Then we specify the folders where the content is stored locally so `Django` can map the endpoint with said folder. For that we define:
+
+```python
+STATIC_ROOT = '/vol/web/static/'
+MEDIA_ROOT = '/vol/web/media/'
+```
+
+Finaly on the core url file `app/app/urls.py` we have to specifically tell `Django` to serve media files on the media url endpoint. For that we add `+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)` to the `urlpattern` variable as follows:
+
+```python
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/user/', include('user.urls')),
+    path('api/book/', include('book.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
 
 ### Travis CI <a name="travis"></a>
 

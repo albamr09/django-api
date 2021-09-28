@@ -1,3 +1,5 @@
+import uuid
+import os
 import datetime
 
 from django.db import models
@@ -5,6 +7,17 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                         PermissionsMixin
 
 from django.conf import settings
+
+
+def book_image_file_path(instance, filename):
+    """Generate unique file path for new book image"""
+    # Get the file extension
+    ext = filename.split('.')[-1]
+    # Concatenate file uuid with extension
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    # Return the file path
+    return os.path.join('uploads/book/', filename)
 
 
 def year_choices():
@@ -97,6 +110,8 @@ class Book(models.Model):
     link = models.CharField(max_length=255, blank=True)
     authors = models.ManyToManyField('Author')
     tags = models.ManyToManyField('Tag')
+    # upload_to: function called when uploading image
+    image = models.ImageField(null=True, upload_to=book_image_file_path)
 
     def __str__(self):
         return self.title
