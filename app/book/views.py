@@ -2,7 +2,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import Tag, Author
+from core.models import Tag, Author, Book
 
 from book import serializers
 
@@ -35,3 +35,27 @@ class AuthorViewSet(BaseBookAttrViewSet):
     """Manage authors in the database"""
     queryset = Author.objects.all()
     serializer_class = serializers.AuthorSerializer
+
+
+class BookViewSet(viewsets.ModelViewSet):
+    """Manage books in the database"""
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Book.objects.all()
+    serializer_class = serializers.BookSerializer
+
+    def get_queryset(self):
+        """Override the get_queryset function and specify to return objects
+        for the current authenticated user only"""
+        return self.queryset.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'retrieve':
+            return serializers.BookDetailSerializer
+
+        return self.serializer_class
+
+    def perform_create(self, serializer):
+        """Create a new book"""
+        serializer.save(user=self.request.user)

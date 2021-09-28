@@ -66,3 +66,15 @@ class ModelTests(TestCase):
 
         # Converting the tag object to string gives the tag name
         self.assertEqual(str(author), author.name)
+
+    def test_book_str(self):
+        """Test the book string representation"""
+        book = models.Book.objects.create(
+            user=sample_user(),
+            title='Crime and Punishment',
+            pages=500,
+            year=1866,
+            price=21.99,
+        )
+
+        self.assertEqual(str(book), book.title)

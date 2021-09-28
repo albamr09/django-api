@@ -1,8 +1,20 @@
+import datetime
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                         PermissionsMixin
 
 from django.conf import settings
+
+
+def year_choices():
+    """ Helper fuction for creating a list of possible publication years"""
+    return [(r, r) for r in range(1500, datetime.date.today().year+1)]
+
+
+def current_year():
+    """ Helper fuction for retrieving the current year"""
+    return datetime.date.today().year
 
 
 class UserManager(BaseUserManager):
@@ -67,3 +79,24 @@ class Author(models.Model):
     # Define the string representation of the Author
     def __str__(self):
         return self.name
+
+
+class Book(models.Model):
+    """Book object"""
+    # Define books attributes
+    # To define a manytoOne relationship we use a
+    # foreign key
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    title = models.CharField(max_length=255)
+    pages = models.IntegerField()
+    year = models.IntegerField(choices=year_choices(), default=current_year)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    link = models.CharField(max_length=255, blank=True)
+    authors = models.ManyToManyField('Author')
+    tags = models.ManyToManyField('Tag')
+
+    def __str__(self):
+        return self.title
