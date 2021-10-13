@@ -7,10 +7,9 @@
 3. [Principles followed](#principles)
 4. [Getting started](#getting_started)
 5. [Project Structure](#project_structure)
-6. [Setup](#setup_docker)
-7. [Project Configuration](#configure_project)
-8. [Testing](#testing)
-9. [Django Notes](#django_documentation)
+6. [Project Configuration](#configure_project)
+7. [Testing](#testing)
+8. [Django Notes](#django_documentation)
 --- 
 ## Description <a name="description"></a>
 
@@ -117,12 +116,6 @@ django-api
 - `docker-compose.yml`: `Docker-compose` configuration file
 - `Dockerfile`: Docker image configuration file
 - `requirements.txt`: `Python` dependencies
-
----
-
-## Setup <a name="setup_docker"></a>
-
-Go to the [Set Up](./docs/SetUp.md) documentation page.
 
 ---
 
