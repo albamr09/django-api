@@ -9,7 +9,7 @@
 5. [Project Structure](#project_structure)
 6. [Project Configuration](#configure_project)
 7. [Testing](#testing)
-8. [Django Notes](#django_documentation)
+
 --- 
 ## Description <a name="description"></a>
 
@@ -128,11 +128,5 @@ Go to the [Configuration](./docs/Configuration.md) documentation page.
 ## Testing <a name="testing"></a>
 
 Go to the [Testing](./docs/Testing.md) documentation page.
-
----
-
-## Django Notes <a name="django_documentation"></a>
-
-Go to the [Django Notes](./docs/DjangoDocs.md) page.
 
 ---
